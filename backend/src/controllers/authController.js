@@ -2,12 +2,12 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
 function signToken(user) {
-  return jwt.sign({ sub: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: "7d" });
+  return jwt.sign({ sub: user._id.toString(), role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
 }
 
 export async function register(req, res) {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
     if (!name || !email || !password) {
       return res.status(400).json({ error: "name, email and password are required" });
     }
@@ -18,7 +18,7 @@ export async function register(req, res) {
     const existing = await User.findOne({ email: email.toLowerCase() });
     if (existing) return res.status(409).json({ error: "Email already registered" });
 
-    const user = await User.create({ name, email, password });
+    const user = await User.create({ name, email, password, ...(role && { role }) });
     const token = signToken(user);
     res.status(201).json({ token, user: user.toSafeObject() });
   } catch (err) {
@@ -55,4 +55,12 @@ export async function updateMe(req, res) {
   const user = await User.findByIdAndUpdate(req.userId, { ...(name && { name }), ...(bio !== undefined && { bio }) }, { new: true });
   if (!user) return res.status(404).json({ error: "User not found" });
   res.json({ user: user.toSafeObject() });
+}
+
+export function logout(req, res) {
+  res.json({ message: "Logged out successfully" });
+}
+
+export function checkAdmin(req, res) {
+  res.json({ message: "Admin access verified", role: req.userRole });
 }

@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     bio: { type: String, default: "" },
     plan: { type: String, default: "Free" },
+    role: { type: String, enum: ["user", "admin", "seller"], default: "user" },
   },
   { timestamps: true }
 );
@@ -23,7 +24,7 @@ userSchema.methods.comparePassword = function (candidate) {
 };
 
 userSchema.methods.toSafeObject = function () {
-  return { id: this._id, name: this.name, email: this.email, bio: this.bio, plan: this.plan };
+  return { id: this._id, name: this.name, email: this.email, bio: this.bio, plan: this.plan, role: this.role };
 };
 
 export default mongoose.model("User", userSchema);
